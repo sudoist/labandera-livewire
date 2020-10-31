@@ -12,6 +12,8 @@ use Tests\TestCase;
 class LoginTest extends TestCase
 {
     use RefreshDatabase;
+    private $email = 'johncosio@email.com';
+    private $password = 'nodepasswordtesting';
 
     /** @test */
     public function can_view_login_page()
@@ -35,24 +37,21 @@ class LoginTest extends TestCase
     /** @test */
     public function a_user_can_login()
     {
-        $user = User::factory()->create(['password' => Hash::make('password')]);
-
         Livewire::test('auth.login')
-            ->set('email', $user->email)
-            ->set('password', 'password')
+            ->set('email', $this->email)
+            ->set('password', $this->password)
             ->call('authenticate');
 
+        $user = User::where('email', $this->email)->first();
         $this->assertAuthenticatedAs($user);
     }
 
     /** @test */
     public function is_redirected_to_the_home_page_after_login()
     {
-        $user = User::factory()->create(['password' => Hash::make('password')]);
-
         Livewire::test('auth.login')
-            ->set('email', $user->email)
-            ->set('password', 'password')
+            ->set('email', $this->email)
+            ->set('password', $this->password)
             ->call('authenticate')
             ->assertRedirect(route('home'));
     }
