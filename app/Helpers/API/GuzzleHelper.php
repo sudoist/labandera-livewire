@@ -12,9 +12,11 @@ class GuzzleHelper
 {
     public function get($requests)
     {
-        $headers = $this->apiHeaders();
-
-        $client = $this->apiClient($headers);
+        $client = new Client([
+            'base_uri' => config('api.url'),
+            'headers' => $this->apiHeaders(),
+            'http_errors' => false
+        ]);
 
         $promises = [];
         $requestIndexCheck = '';
@@ -27,37 +29,48 @@ class GuzzleHelper
         $responses = Promise\unwrap($promises);
 
         // Check if still authenticated
-        $responseCode = json_decode($responses[$requestIndexCheck]->getStatusCode());
-
-        if ($responseCode != '200') {
-            Auth::logout();
-        }
+        $this->isAuthenticated($responses[$requestIndexCheck]->getStatusCode());
 
         return Promise\unwrap($promises);
     }
 
+    private function apiHeaders()
+    {
+        return [
+            'Accept' => 'application/json',
+        ];
+    }
+
+    private function isAuthenticated($responseCode)
+    {
+        if ($responseCode != '200') {
+            Auth::logout();
+        }
+    }
+
     public function post($request, $body)
     {
-        $headers = $this->apiHeaders();
-
         $client = new Client();
 
         $URI = config('api.url') . $request;
 
         try {
             $response = $client->request('POST', $URI, [
-                'headers' => $headers,
+                'headers' => $this->apiHeaders(),
                 'json' => $body,
             ]);
         } catch (GuzzleException $e) {
+            if ($e->getCode() == '401') {
+                return '401';
+            }
+            if ($e->getCode() == '404') {
+                return '404';
+            }
             abort('500');
         }
 
         // Check if still authenticated
-        $responseCode = $response->getStatusCode();
-        if ($responseCode != '200') {
-            Auth::logout();
-        }
+        $this->isAuthenticated($response->getStatusCode());
 
         $res = $response->getBody()->getContents();
 
@@ -70,15 +83,13 @@ class GuzzleHelper
 
     public function put($request, $body)
     {
-        $headers = $this->apiHeaders();
-
         $client = new Client();
 
         $URI = config('api.url') . $request;
 
         try {
             $response = $client->request('PUT', $URI, [
-                'headers' => $headers,
+                'headers' => $this->apiHeaders(),
                 'json' => $body,
                 'http_errors' => false
             ]);
@@ -88,27 +99,16 @@ class GuzzleHelper
         }
 
         // Check if still authenticated
-        $responseCode = $response->getStatusCode();
-
-        if ($responseCode != '200') {
-            Auth::logout();
-        }
+        $this->isAuthenticated($response->getStatusCode());
 
         return true;
-    }
-
-    private function apiHeaders()
-    {
-        return [
-            'Accept' => 'application/json',
-        ];
     }
 
     private function apiClient($headers)
     {
         return new Client([
             'base_uri' => config('api.url'),
-            'headers' => $headers,
+            'headers' => $this->apiHeaders(),
             'http_errors' => false
         ]);
     }
