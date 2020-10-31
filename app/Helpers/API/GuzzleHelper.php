@@ -37,6 +37,7 @@ class GuzzleHelper
     private function apiHeaders()
     {
         return [
+            'x-access-token' => session('token'),
             'Accept' => 'application/json',
         ];
     }

@@ -4,7 +4,6 @@ namespace App\Http\Livewire\Auth;
 
 use App\Helpers\API\GuzzleHelper;
 use App\Models\User;
-use App\Providers\RouteServiceProvider;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -50,6 +49,7 @@ class Login extends Component
         if ($findUser) {
 
             Auth::login($findUser);
+            session(['token' => $response->token]);
 
             return redirect()->intended(route('home'));
 
@@ -61,6 +61,7 @@ class Login extends Component
             ]);
 
             Auth::login($newUser);
+            session(['token' => $response->token]);
 
             return redirect()->intended(route('home'));
         }
