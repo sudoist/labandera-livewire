@@ -23,12 +23,10 @@ class Login extends Component
         'password' => ['required'],
     ];
 
-    public function authenticate()
+    public function authenticate(GuzzleHelper $guzzleHelper)
     {
         $this->validate();
 
-        // Auth with API
-        $guzzleHelper = new GuzzleHelper();
         $request = '/api/auth/login';
 
         $body = [
@@ -49,7 +47,8 @@ class Login extends Component
         if ($findUser) {
 
             Auth::login($findUser);
-            session(['token' => $response->token]);
+            $this->setSessionData('token', $response->token);
+            $this->getUserInfo($guzzleHelper);
 
             return redirect()->intended(route('home'));
 
@@ -61,11 +60,32 @@ class Login extends Component
             ]);
 
             Auth::login($newUser);
-            session(['token' => $response->token]);
+            $this->setSessionData('token', $response->token);
+            $this->getUserInfo($guzzleHelper);
 
             return redirect()->intended(route('home'));
         }
 
+    }
+
+    private function setSessionData($key, $value)
+    {
+        session([$key => $value]);
+    }
+
+    private function getUserInfo(GuzzleHelper $guzzleHelper)
+    {
+
+        $requests = [
+            'user' => '/api/auth/me',
+        ];
+
+        $responses = $guzzleHelper->get($requests);
+
+        $user = json_decode($responses['user']->getBody()->getContents());
+
+        $this->setSessionData('name', $user->name);
+        $this->setSessionData('email', $user->email);
     }
 
     public function render()
