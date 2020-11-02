@@ -8,3 +8,6 @@ This is the Laravel front-end version.
 
 Integration between the Node.js API and using Laravel Livewire as front-end.
 
+## Current dashboard screen using API data
+
+![alt text](https://res.cloudinary.com/langitlupakintoncloud/image/upload/v1604277859/hugo/jcos.io/yievrxxonn2vbrxrwgnp.png "Dashboard page")
